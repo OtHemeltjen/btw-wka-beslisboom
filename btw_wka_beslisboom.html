@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTW Verlegging & WKa Beslisboom</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #1f6feb;
+    --accent-light: #388bfd;
+    --green: #3fb950;
+    --green-dim: #1a3a21;
+    --red: #f85149;
+    --red-dim: #3d1414;
+    --amber: #d29922;
+    --amber-dim: #3d2e00;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --info: #58a6ff;
+    --info-dim: #0d2340;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-badge {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+  .header h1 {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    width: 120px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent-light);
+    transition: width 0.4s ease;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 0;
+    min-height: calc(100vh - 65px);
+  }
+
+  /* MAIN PANEL */
+  .main {
+    padding: 40px 48px;
+    border-right: 1px solid var(--border);
+  }
+
+  /* BREADCRUMB */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .crumb {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .crumb.active { color: var(--text-muted); }
+  .crumb-sep { color: var(--border); font-size: 12px; }
+
+  /* STEP CARD */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    margin-bottom: 24px;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .step-question {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .step-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  /* CHOICE BUTTONS */
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+  }
+  .choice-btn:hover {
+    border-color: var(--accent-light);
+    background: #161d2b;
+    transform: translateX(2px);
+  }
+  .choice-btn .choice-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .choice-btn.yes .choice-icon { background: var(--green-dim); color: var(--green); }
+  .choice-btn.no .choice-icon { background: var(--red-dim); color: var(--red); }
+  .choice-btn.info .choice-icon { background: var(--info-dim); color: var(--info); }
+  .choice-btn .choice-label { font-weight: 500; }
+  .choice-btn .choice-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* RESULT CARDS */
+  .result-card {
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    animation: slideIn 0.25s ease;
+  }
+  .result-card.verlegd {
+    background: var(--green-dim);
+    border: 1px solid #2d6a37;
+  }
+  .result-card.normaal {
+    background: var(--red-dim);
+    border: 1px solid #5a2020;
+  }
+  .result-card.check {
+    background: var(--amber-dim);
+    border: 1px solid #5a4200;
+  }
+  .result-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .result-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .result-card.verlegd .result-title { color: var(--green); }
+  .result-card.normaal .result-title { color: var(--red); }
+  .result-card.check .result-title { color: var(--amber); }
+  .result-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .result-rule {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 12px;
+  }
+
+  /* OBLIGATIONS LIST */
+  .obligations {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .obligations h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .obligation-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .obligation-item::before {
+    content: '→';
+    color: var(--accent-light);
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* RESTART BTN */
+  .restart-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .restart-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  /* SIDE PANEL */
+  .sidebar {
+    background: var(--bg);
+    padding: 32px 28px;
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    margin-bottom: 32px;
+  }
+  .sidebar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  /* INFO CARDS */
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .info-card:hover { border-color: var(--accent-light); }
+  .info-card.open { border-color: var(--accent); }
+  .info-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .info-card-title .toggle {
+    color: var(--text-dim);
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .info-card.open .toggle { transform: rotate(45deg); }
+  .info-card-body {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 10px;
+    display: none;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .info-card.open .info-card-body { display: block; }
+  .info-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .info-tag.bd { background: var(--info-dim); color: var(--info); }
+  .info-tag.wka { background: var(--amber-dim); color: var(--amber); }
+
+  /* LINK */
+  .ext-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-light);
+    font-size: 12px;
+    text-decoration: none;
+    margin-top: 8px;
+  }
+  .ext-link:hover { text-decoration: underline; }
+
+  /* HISTORY */
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .history-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-top: 1px solid var(--border); }
+    .main { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">BTW / WKa</div>
+  <h1>Beslisboom Verleggingsregeling & Ketenaansprakelijkheid</h1>
+  <div class="header-sub">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--text-dim)">Voortgang</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="main">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div id="stepContainer"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Uw pad tot nu toe</div>
+      <div id="historyList"></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px" id="historyEmpty">Nog geen keuzes gemaakt.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Bronnen &amp; Toelichting</div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Wat is de verleggingsregeling?
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag bd">Belastingdienst</span><br>
+          De verleggingsregeling houdt in dat de btw wordt betaald door degene die de prestatie <em>afneemt</em> (de aannemer of inlener), niet door degene die de prestatie verricht.<br><br>
+          De onderaannemer vermeldt op zijn factuur <strong>"btw verlegd"</strong> én het btw-identificatienummer van de hoofdaannemer. Er wordt geen btw in rekening gebracht.<br><br>
+          <a class="ext-link" href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/btw_berekenen_aan_uw_klanten/waarover_btw_berekenen/verleggingsregeling/hoe_werkt_btw_verleggen" target="_blank">↗ Belastingdienst: Hoe werkt btw verleggen?</a>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Werk van stoffelijke aard
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag wka">WKa handleiding</span><br>
+          <strong>Wel</strong> stoffelijk: bouwwerken, aanleg wegen, leggen leidingen, op/afbouwen steigers, bewerken land, schoonmaken sloten/kanalen, onderhoud huizen/voertuigen/schepen, sloopwerk, verpakken producten.<br><br>
+          <strong>Niet</strong> stoffelijk: werkzaamheden van architect, constructeur, adviseur, accountant. Enkel vervoer van goederen valt er ook buiten.<br><br>
+          <em>Bron: §1.2.1 WKa Handleiding Bouwend Nederland 2020</em>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Eigenbouwer
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag wka">WKa handleiding</span><span class="info-tag bd">Belastingdienst</span><br>
+          Een eigenbouwer is een ondernemer die <em>zonder opdracht van een opdrachtgever</em>, in de normale uitoefening van zijn bedrijf, een werk van stoffelijke aard uitvoert aan onroerende zaken of schepen.<br><br>
+          Voorbeelden: woningcorporatie (onderhoud/nieuwbouw), projectontwikkelaar, gemeentelijk grondbedrijf (bouwrijp maken).<br><br>
+          <strong>Geen eigenbouwer</strong>: overheidsinstantie die puur overheidstaak uitvoert op privaatrechtelijke basis.<br><br>
+          Bij twijfel: vraag de Belastingdienst om een <em>Verklaring Eigenbouwerschap</em>.<br><br>
+          <em>Bron: §1.4.2 WKa Handleiding; Belastingdienst rolverdeling</em>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Uitzonderingen verleggingsregeling
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag bd">Belastingdienst</span><br>
+          De verleggingsregeling geldt <strong>niet</strong> als:<br><br>
+          1. <strong>Meer dan 50% van de manuren</strong> in de eigen werkplaats van de onderaannemer worden verricht. U brengt dan gewoon btw in rekening (art. 35 lid 4c InvW).<br><br>
+          2. De uitvoering van het werk <strong>ondergeschikt is aan een verkoopovereenkomst</strong>. Vuistregel: loongedeelte ≤ 10% van aanneemsom (bijv. leveren + heien palen, leveren + leggen tapijt).<br><br>
+          <em>Bron: §1.5.3 en §1.5.4 WKa Handleiding; Belastingdienst uitzonderingen</em>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Inlening vs. aanneming
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag wka">WKa handleiding</span><br>
+          <strong>Aanneming</strong>: resultaatverbintenis, onderaannemer draagt risico kwaliteit, eigen leiding/toezicht, vaste aanneemsom.<br><br>
+          <strong>Inlening</strong>: inspanningsverplichting, inlener heeft leiding/toezicht, facturering op uursbasis, gebruik gereedschap van inlener.<br><br>
+          Bij inlening kan de inlener ook aansprakelijk worden voor <strong>onbetaalde btw</strong> van de uitlener (tenzij verlegging van toepassing).<br><br>
+          <em>Bron: §1.2.3 WKa Handleiding</em>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          G-rekening & WKa bescherming
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag wka">WKa handleiding</span><br>
+          Door te storten op de g-rekening van de onderaannemer/uitlener verlaagt u uw netto aansprakelijkheid. Het gestorte bedrag komt in mindering op een eventuele aansprakelijkstelling.<br><br>
+          <strong>Volledige vrijwaring</strong> bij inlening is mogelijk als:<br>
+          • Uitlener is NEN 4400-1 gecertificeerd<br>
+          • U stort 25% van factuurbedrag (incl. btw) op g-rekening<br>
+          • Of 20% als btw is verlegd<br><br>
+          <em>Bron: §4.2 WKa Handleiding Bouwend Nederland 2020</em>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Factuurvereisten bij verlegging
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag bd">Belastingdienst</span><span class="info-tag wka">WKa handleiding</span><br>
+          Verplichte vermelding op de factuur:<br>
+          • <strong>"Btw verlegd"</strong><br>
+          • <strong>"Artikel 12 vijfde lid Wet OB 1968"</strong><br>
+          • Btw-identificatienummer van de afnemer (hoofdaannemer)<br>
+          • Vergoeding per btw-tarief (als ware btw niet verlegd)<br>
+          • Tijdvak van prestatie + omschrijving werk<br><br>
+          <a class="ext-link" href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/administratie_bijhouden/facturen_maken/factuureisen/aangepaste_regels_facturen/u_maakt_gebruik_van_de_verleggingsregeling" target="_blank">↗ Belastingdienst: Factuureisen verlegging</a>
+        </div>
+      </div>
+
+      <div class="info-card" onclick="toggleCard(this)">
+        <div class="info-card-title">
+          Overheidsopdrachtgevers
+          <span class="toggle">+</span>
+        </div>
+        <div class="info-card-body">
+          <span class="info-tag wka">WKa handleiding</span><span class="info-tag bd">Belastingdienst</span><br>
+          Overheidsinstanties zijn <em>niet automatisch</em> btw-ondernemer. De verleggingsregeling geldt alleen als de overheid als btw-ondernemer handelt.<br><br>
+          Bij twijfel: vraag om een <strong>Verklaring Eigenbouwerschap</strong> van de Belastingdienst, of breng zekerheidshalve 21% btw in rekening.<br><br>
+          Uitvoering van een overheidstaak op privaatrechtelijke basis = geen eigenbouwerschap.<br><br>
+          <em>Bron: §1.4.2 WKa Handleiding; §rolverdeling Belastingdienst</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const steps = {
+  start: {
+    id: 'start',
+    number: 'Stap 1 van 5',
+    question: 'Is de afnemer een BTW-ondernemer?',
+    hint: 'De verleggingsregeling geldt alleen in relaties tussen btw-ondernemers. Particulieren en niet-btw-belaste rechtspersonen vallen buiten de regeling.',
+    choices: [
+      { label: 'Ja', desc: 'Afnemer is btw-plichtig ondernemer of rechtspersoon', key: 'yes', next: 'stoffelijk', class: 'yes' },
+      { label: 'Nee', desc: 'Particulier of niet-btw-belaste entiteit', key: 'no', next: 'result_normaal_particulier', class: 'no' }
+    ]
+  },
+  stoffelijk: {
+    id: 'stoffelijk',
+    number: 'Stap 2 van 5',
+    question: 'Gaat het om werkzaamheden van stoffelijke aard aan een onroerende zaak, schip of personeel daarvoor?',
+    hint: 'Denk aan: bouw, aanleg wegen, leggen leidingen, onderhoud gebouwen, sloopwerk, schoonmaak aan gebouwen van opdrachtgever, groenbeheer. Intellectuele arbeid (architectuur, advies, ontwerp) valt er buiten.',
+    choices: [
+      { label: 'Ja', desc: 'Fysiek/bouwtechnisch werk aan onroerende zaak of schip', key: 'yes', next: 'aanneming', class: 'yes' },
+      { label: 'Nee', desc: 'Intellectueel werk, transport, administratie o.i.d.', key: 'no', next: 'result_normaal_geen_stof', class: 'no' }
+    ]
+  },
+  aanneming: {
+    id: 'aanneming',
+    number: 'Stap 3 van 5',
+    question: 'Is er sprake van aanneming/onderaanneming of uitlening van personeel?',
+    hint: 'Aanneming = resultaatverbintenis, onderaannemer draagt risico en heeft eigen leiding. Inlening = personeel werkt onder leiding van de inlener, inspanningsverplichting, uursbasis.',
+    choices: [
+      { label: 'Ja – aanneming of inlening', desc: 'Onderaannemingsovereenkomst of personeelsuitlening voor dit werk', key: 'yes', next: 'werkplaats', class: 'yes' },
+      { label: 'Nee – opdrachtrelatie zonder keten', desc: 'Directe opdracht, geen verdere uitbesteding', key: 'no', next: 'result_normaal_geen_aanneming', class: 'no' }
+    ]
+  },
+  werkplaats: {
+    id: 'werkplaats',
+    number: 'Stap 4 van 5',
+    question: 'Worden meer dan 50% van de manuren op de bouwplaats / bij de opdrachtgever uitgevoerd (niet in eigen werkplaats)?',
+    hint: 'Als de onderaannemer het werk voor meer dan 50% in zijn eigen werkplaats of fabriek verricht, geldt de verleggingsregeling niet. U brengt dan gewoon 21% btw in rekening (art. 35 lid 4c InvW 1990).',
+    choices: [
+      { label: 'Ja – overwegend ter plaatse', desc: '>50% van uren bij opdrachtgever/op bouwplaats', key: 'yes', next: 'eigenbouwer', class: 'yes' },
+      { label: 'Nee – overwegend in eigen werkplaats', desc: '>50% van uren in eigen fabriek/werkplaats van onderaannemer', key: 'no', next: 'check_verkoop', class: 'no' }
+    ]
+  },
+  check_verkoop: {
+    id: 'check_verkoop',
+    number: 'Stap 4b',
+    question: 'Is de uitvoering van het werk ondergeschikt aan een verkoopovereenkomst?',
+    hint: 'Richtlijn: het loongedeelte bedraagt niet meer dan ~10% van de aanneemsom. Voorbeelden: leveren + leggen tapijt, leveren + monteren keuken, leveren + heien palen.',
+    choices: [
+      { label: 'Ja – bijkomend installatiewerk', desc: 'Kosten bijkomende werkzaamheden gering, inbegrepen bij prijs', key: 'yes', next: 'result_normaal_verkoop', class: 'yes' },
+      { label: 'Nee – geen verkooprelatie', desc: 'Zuivere aanneming of loongedeelte > 10%', key: 'no', next: 'result_normaal_werkplaats', class: 'no' }
+    ]
+  },
+  eigenbouwer: {
+    id: 'eigenbouwer',
+    number: 'Stap 5 van 5',
+    question: 'Is de afnemer (opdrachtgever) een eigenbouwer of is er sprake van onderaanneming in een keten?',
+    hint: 'Eigenbouwer = ondernemer die zonder opdracht van een opdrachtgever, in de normale uitoefening van zijn bedrijf, het werk uitvoert (bijv. woningcorporatie, projectontwikkelaar). Bij een overheidsopdrachtgever: controleer of deze als btw-ondernemer handelt en vraag zo nodig een Verklaring Eigenbouwerschap op.',
+    choices: [
+      { label: 'Ja – eigenbouwer of aanneming in keten', desc: 'Woningcorporatie, projectontwikkelaar, aannemer in keten', key: 'yes', next: 'result_verlegd', class: 'yes' },
+      { label: 'Nee – zuivere opdrachtgever', desc: 'Opdrachtgever is geen eigenbouwer (geen aanneming voor hem in normale bedrijfsuitvoering)', key: 'no', next: 'result_normaal_opdrachtgever', class: 'no' },
+      { label: 'Overheid – twijfel', desc: 'Opdrachtgever is overheidsinstantie, onduidelijk of btw-ondernemer', key: 'info', next: 'result_overheid', class: 'info' }
+    ]
+  },
+
+  // RESULTS
+  result_verlegd: {
+    type: 'result',
+    variant: 'verlegd',
+    icon: '✓',
+    title: 'BTW Verlegd — Verleggingsregeling van toepassing',
+    desc: 'Alle voorwaarden zijn vervuld. De onderaannemer factureert zonder btw. Op de factuur vermeldt u "btw verlegd" en het btw-identificatienummer van de hoofdaannemer. De hoofdaannemer geeft de btw aan in zijn eigen aangifte (rubriek 1e voor omzet; afnemer in rubriek 2a).',
+    obligations: [
+      'Vermeld "btw verlegd, artikel 12 vijfde lid Wet OB 1968" op de factuur',
+      'Vermeld het btw-identificatienummer van de hoofdaannemer op de factuur',
+      'WKa van toepassing: overweeg stortingen op g-rekening onderaannemer',
+      'Leg mandagenregisters bij voor eventuele matiging aansprakelijkheid',
+      'Controleer KvK-inschrijving en bewaar periodiek verklaring betalingsgedrag',
+      'Hoofdaannemer geeft verlegde btw aan in aangifte rubriek 2a en trekt af in 5b'
+    ],
+    rule: 'Grondslag: Art. 12 lid 5 Wet OB 1968 | Art. 24b Uitv. Besl. OB 1968'
+  },
+  result_normaal_particulier: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (particulier/niet-ondernemer)',
+    desc: 'De afnemer is geen btw-ondernemer. De verleggingsregeling is niet van toepassing. U brengt het reguliere btw-tarief van 21% in rekening op uw factuur.',
+    obligations: [
+      'Factureer met 21% btw',
+      'Draag btw af in uw reguliere btw-aangifte (rubriek 1a)',
+      'WKa is mogelijk wel van toepassing op de keten (check eigenbouwerschap)',
+      'Particulier eindafnemer = geen WKa aansprakelijkheid bij hem'
+    ],
+    rule: 'De verleggingsregeling geldt uitsluitend tussen btw-ondernemers (art. 12 Wet OB 1968)'
+  },
+  result_normaal_geen_stof: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (geen stoffelijk werk)',
+    desc: 'De werkzaamheden zijn van intellectuele of geestelijke aard, of betreffen geen onroerende zaak of schip. De verleggingsregeling is niet van toepassing. U factureert met 21% btw.',
+    obligations: [
+      'Factureer met 21% btw',
+      'WKa is niet van toepassing (geen werk van stoffelijke aard)',
+      'Denk aan: architecten, adviseurs, accountants, ontwerpers',
+      'Ook puur vervoer van goederen valt buiten de regeling'
+    ],
+    rule: 'Verlegging geldt alleen voor fysieke werkzaamheden aan onroerende zaken/schepen (art. 24b Uitv. Besl. OB 1968)'
+  },
+  result_normaal_geen_aanneming: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (geen aanneming/inlening)',
+    desc: 'Er is geen sprake van een aannemings- of inleenrelatie in de keten. De verleggingsregeling is niet van toepassing. U factureert met het reguliere tarief.',
+    obligations: [
+      'Factureer met 21% btw',
+      'WKa is niet van toepassing (geen keten van aanneming)',
+      'Reguliere leverancier-klant relatie'
+    ],
+    rule: 'De verleggingsregeling bij onderaanneming vereist een aanneem- of inleenrelatie'
+  },
+  result_normaal_werkplaats: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (>50% in eigen werkplaats)',
+    desc: 'Meer dan de helft van de manuren wordt in de eigen werkplaats of fabriek van de onderaannemer verricht. De uitzondering van art. 35 lid 4c InvW 1990 is van toepassing. U brengt gewoon 21% btw in rekening.',
+    obligations: [
+      'Factureer met 21% btw',
+      'WKa ketenaansprakelijkheid is niet van toepassing voor dit deel',
+      'Leg vast welk percentage uren in eigen werkplaats vs. ter plaatse',
+      'Als ≥50% toch ter plaatse blijkt: herzie factuur naar "btw verlegd"'
+    ],
+    rule: 'Uitzondering: art. 35 lid 4c Invorderingswet 1990 — werk geheel of grotendeels in eigen bedrijf'
+  },
+  result_normaal_verkoop: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (werk ondergeschikt aan verkoop)',
+    desc: 'De installatie- of plaatsingswerkzaamheden zijn ondergeschikt aan de verkoopovereenkomst. De vuistregel is dat het loongedeelte niet meer dan ~10% van de aanneemsom bedraagt. U factureert met 21% btw over het geheel.',
+    obligations: [
+      'Factureer het totaalbedrag (levering + installatie) met 21% btw',
+      'WKa is niet van toepassing',
+      'Documenteer de verhouding loonkosten vs. totaalprijs',
+      'Loongedeelte > 10%? Heroverweeg classificatie → mogelijk toch verlegging'
+    ],
+    rule: 'Uitzondering: art. 35 lid 4b Invorderingswet 1990 — bijkomende arbeid bij koopovereenkomst'
+  },
+  result_normaal_opdrachtgever: {
+    type: 'result',
+    variant: 'normaal',
+    icon: '✕',
+    title: '21% BTW — Geen verlegging (zuivere opdrachtgever)',
+    desc: 'De afnemer is een zuivere opdrachtgever (geen eigenbouwer, geen aannemer in keten). U als hoofdaannemer factureert de opdrachtgever mét btw. Als u werk uitbesteedt aan onderaannemers, verlegt de onderaannemer de btw wél naar u als hoofdaannemer.',
+    obligations: [
+      'Factureer opdrachtgever met 21% btw',
+      'Inkomende facturen van uw onderaannemers: btw verlegd naar u',
+      'WKa: opdrachtgever is niet aansprakelijk (geen eigenbouwerschap)',
+      'U als hoofdaannemer bent aansprakelijk voor loonheffingen onderaannemers',
+      'Overweeg g-rekening stortingen bij onderaannemers'
+    ],
+    rule: 'Opdrachtgever ≠ eigenbouwer → geen ketenaansprakelijkheid opdrachtgever (art. 35 InvW 1990)'
+  },
+  result_overheid: {
+    type: 'result',
+    variant: 'check',
+    icon: '⚠',
+    title: 'Nader onderzoek vereist — Overheidsopdrachtgever',
+    desc: 'Overheidsinstanties handelen niet altijd als btw-ondernemer. De verleggingsregeling is alleen van toepassing als de overheid als btw-ondernemer optreedt en als eigenbouwer kan worden aangemerkt. Bij twijfel: vraag een Verklaring Eigenbouwerschap op of breng zekerheidshalve 21% btw in rekening.',
+    obligations: [
+      'Vraag een Verklaring Eigenbouwerschap op bij de overheidsopdrachtgever',
+      'Controleer of de overheid handelt als btw-ondernemer (niet louter overheidstaak)',
+      'Bij twijfel: breng zekerheidshalve 21% btw in rekening',
+      'Overheidstaak op privaatrechtelijke basis = geen eigenbouwerschap',
+      'Gemeentelijk grondbedrijf (bouwrijp maken) = wél eigenbouwer mogelijk',
+      'WKa: gemeente/Rijk dat puur overheidstaak uitbesteedt = geen eigenbouwer'
+    ],
+    rule: 'Art. 7 Wet OB 1968 — overheid als ondernemer | §1.4.2 WKa Handleiding Bouwend Nederland 2020'
+  }
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let currentStep = 'start';
+let history = [];
+const totalSteps = 5;
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+function render() {
+  const step = steps[currentStep];
+  const container = document.getElementById('stepContainer');
+
+  if (step.type === 'result') {
+    renderResult(step, container);
+  } else {
+    renderStep(step, container);
+  }
+
+  renderBreadcrumb();
+  renderHistory();
+  updateProgress();
+}
+
+function renderStep(step, container) {
+  container.innerHTML = `
+    <div class="step-card">
+      <div class="step-number">${step.number}</div>
+      <div class="step-question">${step.question}</div>
+      <div class="step-hint">${step.hint}</div>
+      <div class="choices">
+        ${step.choices.map(c => `
+          <button class="choice-btn ${c.class}" onclick="choose('${step.id}', '${c.label}', '${c.next}')">
+            <div class="choice-icon">${c.class === 'yes' ? 'J' : c.class === 'no' ? 'N' : 'i'}</div>
+            <div>
+              <div class="choice-label">${c.label}</div>
+              <div class="choice-desc">${c.desc}</div>
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    ${history.length > 0 ? `<button class="restart-btn" onclick="goBack()">← Vorige stap</button>` : ''}
+  `;
+}
+
+function renderResult(step, container) {
+  const obligationsHtml = step.obligations
+    .map(o => `<div class="obligation-item">${o}</div>`)
+    .join('');
+
+  container.innerHTML = `
+    <div class="result-card ${step.variant}">
+      <div class="result-icon">${step.icon}</div>
+      <div class="result-title">${step.title}</div>
+      <div class="result-desc">${step.desc}</div>
+      <div class="result-rule">${step.rule}</div>
+    </div>
+    <div class="obligations">
+      <h3>Verplichtingen &amp; Aandachtspunten</h3>
+      ${obligationsHtml}
+    </div>
+    <button class="restart-btn" onclick="restart()">↺ Opnieuw beginnen</button>
+    <button class="restart-btn" onclick="goBack()" style="margin-left:8px">← Vorige stap</button>
+  `;
+}
+
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const crumbs = ['Start', ...history.map(h => h.label)];
+  bc.innerHTML = crumbs.map((c, i) => {
+    const isLast = i === crumbs.length - 1;
+    return `<span class="crumb ${isLast ? 'active' : ''}">${c}</span>${!isLast ? '<span class="crumb-sep">›</span>' : ''}`;
+  }).join('');
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if (history.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div class="history-dot"></div>
+      <span>${h.question}: <strong>${h.label}</strong></span>
+    </div>
+  `).join('');
+}
+
+function updateProgress() {
+  const stepKeys = ['start', 'stoffelijk', 'aanneming', 'werkplaats', 'eigenbouwer'];
+  const idx = stepKeys.indexOf(currentStep);
+  const step = steps[currentStep];
+  let pct = step.type === 'result' ? 100 : Math.round(((idx) / totalSteps) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+
+function choose(stepId, label, next) {
+  const step = steps[stepId];
+  history.push({ question: step.question, label, from: stepId });
+  currentStep = next;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  if (history.length === 0) return;
+  const prev = history.pop();
+  currentStep = prev.from;
+  render();
+}
+
+function restart() {
+  history = [];
+  currentStep = 'start';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleCard(el) {
+  el.classList.toggle('open');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
